@@ -1,0 +1,56 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adire Lane — owner view</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#faf7f2;color:#1b1b1b}
+h1{margin:0 0 8px}h2{margin-top:28px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+th,td{border-bottom:1px solid #eee;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#f0ebe3}.pill{padding:2px 8px;border-radius:10px;font-size:12px}
+.paid{background:#d6f5df}.pending_payment{background:#fff1c2}.paid_needs_attention,.open{background:#ffd6d6}.cancelled,.resolved{background:#eee}
+input{padding:6px;width:70px}#tok{width:320px}button{padding:5px 10px}
+.muted{color:#777;font-size:12px}
+.card{background:#fff;padding:10px 14px;border-radius:8px;line-height:1.6}
+</style></head>
+<body>
+<h1>Adire Lane — owner view</h1>
+<p class="muted">Admin token is kept in this tab only. <input id="tok" type="password" placeholder="ADMIN_TOKEN"> <button onclick="saveTok()">Load</button></p>
+<h2>Today at a glance</h2><div id="brief" class="card"></div>
+<h2>Handovers needing a human</h2><table id="handovers"></table>
+<h2>Orders</h2><table id="orders"></table>
+<h2>Catalogue & stock</h2><p class="muted">Raising stock on a sold-out size automatically messages everyone on its restock list.</p><table id="products"></table>
+<h2>Restock waitlist</h2><table id="waitlist"></table>
+<h2>Follow-up messages sent for you</h2><table id="notifications"></table>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const naira = (n) => '₦' + Number(n).toLocaleString('en-NG');
+function saveTok(){ sessionStorage.setItem('tok', $('tok').value); load(); }
+async function api(path, opts = {}) {
+  const r = await fetch('/admin' + path, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('tok'), ...(opts.headers || {}) } });
+  const body = await r.json();
+  if (!r.ok) throw new Error(body.error?.message || r.status);
+  return body;
+}
+async function load() {
+  try {
+    const [orders, products, handovers, brief, waitlist, notes] = await Promise.all([api('/orders'), api('/products'), api('/handovers'), api('/brief'), api('/waitlist'), api('/notifications')]);
+    $('brief').innerHTML = brief.summary_lines.map(esc).join('<br>');
+    $('waitlist').innerHTML = '<tr><th>Ref</th><th>Item</th><th>Customer</th><th>Status</th><th>Joined</th></tr>' +
+      waitlist.map(w => `<tr><td>${esc(w.id)}</td><td>${esc(w.sku)}</td><td>${esc(w.customer_name)} <span class="muted">${esc(w.customer_phone)}</span></td><td><span class="pill ${w.status==='notified'?'paid':'pending_payment'}">${esc(w.status)}</span></td><td>${new Date(w.created_at).toLocaleString()}</td></tr>`).join('');
+    $('notifications').innerHTML = '<tr><th>When</th><th>About</th><th>Message</th><th>Result</th></tr>' +
+      notes.map(n => `<tr><td>${new Date(n.updated_at).toLocaleString()}</td><td>${esc(n.ref)}</td><td>${esc(n.kind.replace(/_/g,' '))}</td><td><span class="pill ${n.status==='sent'?'paid':n.status==='failed'?'open':'cancelled'}">${esc(n.status)}</span> <span class="muted">${n.status==='sent'?'':esc(n.detail)}</span></td></tr>`).join('');
+    $('handovers').innerHTML = '<tr><th>ID</th><th>When</th><th>Reason</th><th>Customer</th><th>Order</th><th>Summary</th><th>Status</th><th></th></tr>' +
+      handovers.map(h => `<tr><td>${esc(h.id)}</td><td>${new Date(h.created_at).toLocaleString()}</td><td>${esc(h.reason_category)}</td><td>${esc(h.customer_name)} ${esc(h.customer_phone)}</td><td>${esc(h.order_reference)}</td><td>${esc(h.summary)}</td><td><span class="pill ${esc(h.status)}">${esc(h.status)}</span></td><td>${h.status==='open'?`<button onclick="resolveHo('${esc(h.id)}')">Resolve</button>`:''}</td></tr>`).join('');
+    $('orders').innerHTML = '<tr><th>Ref</th><th>Created</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Fulfilment</th></tr>' +
+      orders.map(o => `<tr><td><b>${esc(o.reference)}</b></td><td>${new Date(o.created_at).toLocaleString()}</td><td>${esc(o.customer.name)}<br><span class="muted">${esc(o.customer.phone)}</span></td><td>${o.items.map(i => `${i.quantity}× ${esc(i.sku)} @ ${naira(i.unit_price)}`).join('<br>')}</td><td>${naira(o.total)}<br><span class="muted">incl. delivery ${naira(o.delivery_fee)}</span></td><td><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.reservation_expired?'<br><span class="muted">reservation expired</span>':''}</td><td>${esc(o.payment_status)}${o.payments.map(p => `<br><span class="muted">${esc(p.provider)} · ${esc(p.status)}</span>`).join('')}</td><td>${esc(o.fulfilment.method)} ${esc(o.fulfilment.zone)}</td></tr>`).join('');
+    $('products').innerHTML = '<tr><th>Code</th><th>Name</th><th>Pricing</th><th>SKU</th><th>Attributes</th><th>Stock</th></tr>' +
+      products.flatMap(p => p.variants.map((v, i) => `<tr>${i===0?`<td rowspan="${p.variants.length}"><b>${esc(p.code)}</b></td><td rowspan="${p.variants.length}">${esc(p.name)}</td><td rowspan="${p.variants.length}">${naira(p.base_price)} ${p.pricing_mode==='negotiable'?`<br><span class="muted">negotiable, floor ${naira(p.minimum_price)}</span>`:'<br><span class="muted">fixed</span>'}</td>`:''}<td>${esc(v.sku)}</td><td>${esc(Object.values(v.attributes).join(' / '))}</td><td>${v.stock_quantity===null?'<span class="muted">not tracked</span>':`<input type="number" min="0" value="${v.stock_quantity}" onchange="setStock('${esc(v.sku)}', this.value)">`}</td></tr>`)).join('');
+  } catch (e) { alert('Could not load: ' + e.message); }
+}
+async function setStock(sku, q) { await api('/variants/' + sku, { method: 'PATCH', body: JSON.stringify({ stock_quantity: Number(q) }) }); load(); }
+async function resolveHo(id) { await api('/handovers/' + id + '/resolve', { method: 'POST' }); load(); }
+if (sessionStorage.getItem('tok')) load();
+setInterval(() => sessionStorage.getItem('tok') && load(), 15000);
+</script>
+</body></html>

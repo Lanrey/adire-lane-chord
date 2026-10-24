@@ -1,0 +1,33 @@
+{
+  "name": "adire-lane-commerce",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Commerce backend + remote MCP server for the Adire Lane Chord sales teammate",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "start": "node src/index.ts",
+    "dev": "node --watch --env-file-if-exists=../.env src/index.ts",
+    "seed": "node --env-file-if-exists=../.env src/seed.ts --reset",
+    "test": "node --test --test-concurrency=1 --test-timeout=20000 \"test/**/*.test.ts\"",
+    "chord:setup": "node --env-file-if-exists=../.env ../scripts/chord-setup.ts",
+    "chord:smoke": "node --env-file-if-exists=../.env ../scripts/chord-smoke.ts",
+    "typecheck": "tsc -p .",
+    "chord:credits": "node --env-file-if-exists=../.env ../scripts/chord-credits.ts",
+    "chord:payments": "node --env-file-if-exists=../.env ../scripts/chord-payments-setup.ts",
+    "chord:owner": "node --env-file-if-exists=../.env ../scripts/chord-owner-setup.ts",
+    "demo:reset": "node --env-file-if-exists=../.env ../scripts/demo-reset.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3"
+  }
+}

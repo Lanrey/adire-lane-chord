@@ -1,0 +1,27 @@
+# fly launch --no-deploy --copy-config && fly volumes create data --size 1 && fly secrets set MCP_TOKEN=… ADMIN_TOKEN=… PUBLIC_BASE_URL=https://<app>.fly.dev && fly deploy
+app = "adire-lane-tsg"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "8080"
+  DB_PATH = "/data/adire-lane.db"
+
+[mounts]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"   # Chord calls must not hit a cold start mid-conversation
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/healthz"
+    timeout = "5s"
