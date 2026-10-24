@@ -14,7 +14,7 @@ for itself.
 |---|-------------|-------|
 | 1 | Role + problem | Above |
 | 2 | Live agent | Chord teammate **"Adire Lane Sales"** in the WhatsApp simulator (backend always on at `adire-lane-tsg.fly.dev`). Owner teammate: **"Adire Lane Owner Brief"** |
-| 3 | Code + README | This repo: `server/` (tools), `skill/` (Chord skill), `scripts/` (Chord setup), `specs/`, [README](README.md) |
+| 3 | Code + README | [github.com/Lanrey/adire-lane-chord](https://github.com/Lanrey/adire-lane-chord) (private; share access with your TSG contact): `server/` (tools), `skill/` (Chord skill), `scripts/` (Chord setup), `specs/`, [README](README.md) |
 | 4 | 3-minute recording | _<link>_. Script: [`docs/demo-script.md`](docs/demo-script.md) |
 | 5 | Field notes | [`docs/field-notes.md`](docs/field-notes.md) (full log: [appendix](docs/field-notes-appendix.md)) |
 | 6 | Go-live note | [`docs/go-live-note.md`](docs/go-live-note.md) |
