@@ -82,8 +82,9 @@ Kemi's floor price, and stock is committed only after payment is confirmed.
 
 ### Out of scope (deliberately left out)
 FR-12 appointment scheduling, FR-13 live WhatsApp, real payments, refunds, multi-tenant
-admin and auth beyond a single admin token, delivery-partner integration,
-image recognition, analytics, and abandoned-cart recovery.
+admin and auth beyond a single admin token (plus the owner PIN, specs/09), delivery-partner
+integration, and image recognition. (Analytics and abandoned-cart recovery were moved into
+scope in iterations 4–5; see Amendments.)
 
 ## Conversation rules (PRD §9) → skill
 CR-1 natural and concise, and never claims to be human · CR-2 tools for every fact ·
@@ -112,5 +113,9 @@ fails, say so and don't guess.
 - **FR-04 (2026-10-24, specs/10):** the counter-offer is the same for every below-floor bid on an item
   (never increases as the bid rises).
 - **FR-07a (2026-10-24):** a customer can cancel their own unpaid order (`cancel_order`), releasing stock at once.
+- **Scope (2026-10-24, specs/08–09):** basic analytics (owner brief, lost-demand log, impact numbers)
+  and abandoned-cart recovery (hold reminder, payment-failed message, restock alerts) are now in scope.
+- **FR-11a (2026-10-24, specs/08–09):** the owner also has an owner-only MCP endpoint `/mcp/owner`
+  (separate token) with the brief and PIN-gated write tools; see `04-tool-contracts.md`.
 - **CR-11 (2026-10-24):** every customer-facing message (agent replies and automatic follow-ups) uses plain,
   non-technical language. See the "Talking to customers" rules in the skill.

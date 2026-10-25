@@ -194,6 +194,8 @@ test('G-2 impact: after-hours sales, follow-up recoveries and waitlist conversio
   // waitlisted Ike buys the restocked sneakers → conversion; the order was created at night → after-hours
   const o = order(srv.db, [{ sku: 'SN-210-BLK-43', quantity: 1 }], { method: 'pickup' }, { name: 'Ike', phone: '08077770000' });
   srv.db.prepare('UPDATE orders SET created_at = ? WHERE reference = ?').run(Date.parse('2026-10-24T22:10:00Z'), o.order_reference);
+  // Pin the waitlist join before that order, so the test doesn't depend on today's date.
+  srv.db.prepare("UPDATE waitlist SET created_at = ? WHERE variant_id = (SELECT id FROM variant WHERE sku = 'SN-210-BLK-43')").run(Date.parse('2026-10-24T20:00:00Z'));
   srv.db.prepare("INSERT INTO notification (key, ref, kind, status, detail, attempts, updated_at) VALUES (?, ?, 'hold_reminder', 'sent', 'queued', 1, ?)").run(`${o.order_reference}:hold_reminder`, o.order_reference, Date.now() - 1000);
   await admin(`/orders/${o.order_reference}/confirm-payment`, { method: 'POST', headers: { 'Idempotency-Key': 'imp-1' } });
   const imp = impact(srv.db, 0);

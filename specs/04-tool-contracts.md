@@ -26,7 +26,9 @@ reliably), with a pre-formatted `*_display` string such as `"₦15,000"`. Storag
 - T-2 Prices in the output always come from the database or a validated offer.
 - T-3 `get_payment_status` never changes state.
 - T-4 No tool can mark an order paid, change stock or change prices.
-- T-5 The tool list over MCP is exactly the eight names above.
+- T-5 The tool list over MCP is exactly the sales tools in this file: the eight above plus
+  `notify_me_when_available` (iteration 3) and `cancel_order` (iteration 6), 10 in total. The owner
+  tools are on a separate server (see below) and never appear on `/mcp`.
 - T-7 (iteration 2, live finding F-11) Tool inputs are **flat scalars**. A live Chord turn sent
   nested-object arguments to the v1 `create_pending_order` and failed schema validation 5/5 times
   before reaching the handler. Every flat-argument tool succeeded. Array inputs also accept a JSON
@@ -59,3 +61,24 @@ reliably), with a pre-formatted `*_display` string such as `"₦15,000"`. Storag
   email once with a "skip" option. On skip, use a no-mailbox `receipts+<order>@<our host>` silently.
 - `get_payment_status` returning `paid` marks the automatic "payment received" message as already
   delivered by the agent.
+
+## Sales tools added after the first table
+
+| # | Tool | Input | Success output (key fields) | Error codes |
+|---|------|-------|-----------------------------|-------------|
+| 9 | `notify_me_when_available` | `{sku, customer_name, customer_phone}` | `waitlist_reference: "WL-XXXXXX", sku, product_name, currently_available, people_waiting, next_step` | `NOT_FOUND`, `INACTIVE` |
+| 10 | `cancel_order` | `{order_reference, customer_phone}` | `order_reference, status:"cancelled", released[{sku, quantity}]` | `NOT_FOUND`, `INVALID_STATE` |
+
+## Owner-only tools (specs/08 I-3, specs/09 G-1)
+
+Served on `POST /mcp/owner` with a separate bearer (`OWNER_MCP_TOKEN`), assigned only to the
+"Adire Lane Owner Brief" teammate. Every tool except `get_owner_brief` needs `owner_pin`, compared
+in constant time with `OWNER_PIN`. Writes are recorded in `owner_action`.
+
+| Tool | Input | Success output | Error codes |
+|------|-------|----------------|-------------|
+| `get_owner_brief` | `{}` | `summary_lines[], impact{…}, numbers{…}, open_handovers, missed_demand, waitlists, low_stock` | — |
+| `update_stock` | `{sku, quantity: int 0..999, owner_pin}` | `sku, stock_before, stock_after, restock_alerts_queued` | `NOT_FOUND`, `INVALID_INPUT` (wrong PIN, untracked item), `INVALID_STATE` (no PIN set) |
+| `set_price_rules` | `{code, base_price?, minimum_price?, pricing_mode?, owner_pin}` (naira) | `code, before, after, note` | `NOT_FOUND`, `INVALID_INPUT` |
+| `list_open_handovers` | `{owner_pin}` | `handovers[{id, reason_category, summary, customer_name, order_reference, created_at}]` | `INVALID_INPUT` |
+| `resolve_handover` | `{handover_id: "HO-XXXXXXXX", note, owner_pin}` | `handover_id, status:"resolved"` | `NOT_FOUND`, `INVALID_INPUT` |

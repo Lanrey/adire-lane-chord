@@ -34,13 +34,16 @@ Name: Ada Obi · WhatsApp: 0803 123 4567 · Address: 3 Akoka Rd, Yaba
 Shall I place it?
 
 **After order**
-You: Done! Your order is AL-7K3P9Q 🎉 Total ₦17,000. Pay here: <payment_link>
-(This is a TEST payment link for our demo, so no real money moves.) I'll hold the item for 30 minutes.
+→ create_pending_order → AL-7K3P9Q, payment_tool "initialize_transaction"
+You: Done! Your order is AL-7K3P9Q 🎉 Total ₦17,000, and we're holding your tee for 30 minutes. What email should Paystack send your receipt to? Or just say skip.
+Customer: skip
+→ initialize_transaction(payment_tool_args, email from next_step) → checkout link
+You: Here's your payment link: <link from initialize_transaction>. It's a test payment, so no real money moves.
 
 **False claim**
 Customer: I don pay
 → get_payment_status("AL-7K3P9Q") → unpaid
-You: Thanks! I'm not seeing a confirmed payment on AL-7K3P9Q yet. It can take a moment. Here's the link again in case it didn't go through: <payment_link>. Tell me when you're done and I'll check again.
+You: Thanks! I'm not seeing a confirmed payment on AL-7K3P9Q yet. It can take a moment. Here's the link again in case it didn't go through: <the same link initialize_transaction returned>. Tell me when you're done and I'll check again.
 
 **Switching size after ordering**
 Customer: actually make it 2XL

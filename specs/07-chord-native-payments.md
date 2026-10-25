@@ -55,8 +55,9 @@ agent ─► get_payment_status (unchanged) ─► "paid"
   - on `booking.confirmed`, find the order reference (`AL-XXXXXX`) in the booking
     title/description/payment message, and require `amount_paid` × 100 to equal the order total
     and `currency` to equal NGN;
-  - call `confirmPayment` with provider `chord_booking` and idempotency key
-    `chord-booking:<booking_id>`;
+  - call `confirmPayment` with idempotency key `chord-booking:<booking_id>` (as built, the payment
+    row's provider is `paystack`, because Chord collects through its Paystack connector; the key
+    prefix tells the sources apart);
   - answer 2xx for anything it has recorded, including ignored events, so Chord doesn't retry
     forever.
 - **P-5 Failure events.** `booking.payment_failed`, `booking.payment_mismatch` and
@@ -75,9 +76,9 @@ agent ─► get_payment_status (unchanged) ─► "paid"
 | # | Question | How to verify | Fallback |
 |---|----------|---------------|----------|
 | C-1 ✅ | Can a catalog item carry an arbitrary per-order amount, and can items be updated per order (full-replace `items` on PUT)? | **Verified 2026-10-24:** created "Adire Lane orders" (`3ada74de…`), PUT item `AL-QJDMRW` at `amount_minor: 1350000` → 200, attached to the teammate → 200 | — |
-| C-2 | What are the built-in payment tool's name and arguments, and does it charge a catalog item? | Enable `bookings` + `paystack` tool types, then send one test turn and read `steps[].tool_name` | Create the booking server-side (`POST …/bookings` with `payment_message`). ⚠ That link would come from *our* tool, so it may still be blocked |
+| C-2 ✅ (see Live resolution: `initialize_transaction`) | What are the built-in payment tool's name and arguments, and does it charge a catalog item? | Enable `bookings` + `paystack` tool types, then send one test turn and read `steps[].tool_name` | Create the booking server-side (`POST …/bookings` with `payment_message`). ⚠ That link would come from *our* tool, so it may still be blocked |
 | C-3 ✅ | Paystack session form fields | **Verified:** empty body → `400 "paystack_secret_key is required"`. Body is `{"paystack_secret_key": "sk_test_…"}` | — |
-| C-4 | Does `booking.confirmed` include `amount_paid`/`currency` and our reference? | Webhook test delivery + one real test payment | Fetch `GET …/bookings/{id}` before confirming |
+| C-4 (moot: the live path creates no booking) | Does `booking.confirmed` include `amount_paid`/`currency` and our reference? | Webhook test delivery + one real test payment | Fetch `GET …/bookings/{id}` before confirming |
 | C-5 (partly ✅: catalogs + teammate attach OK) | Is the API key's scope enough for catalogs, bookings, connector sessions and webhooks? | First call of each | Do that step in the Chord app |
 
 ## Traceability
@@ -89,7 +90,7 @@ agent ─► get_payment_status (unchanged) ─► "paid"
 | P-3 | `skill/adire-lane-sales/SKILL.md` | live simulator turn |
 | P-4, P-5 | `server/src/http.ts` `/webhooks/chord`, `payments.ts` | `test/chord-webhook.test.ts` (doc vector, dedupe, amount check, idempotency) |
 
-## Status
+## Status (before the Paystack key; superseded by "Live resolution" below)
 
 - Built and tested (56/56): webhook receiver (doc test vector, dedupe, amount check, exactly-once
   stock, handover on mismatch/late), catalog sync (exact per-order totals, paid orders removed),

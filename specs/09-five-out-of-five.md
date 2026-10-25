@@ -11,7 +11,7 @@ sales teammate):
 |------|--------|-------|
 | `update_stock(sku, quantity)` | Sets on-hand stock. Going 0 → >0 triggers waitlist "back in stock" messages | Integer 0..999. Audit row |
 | `set_price_rules(code, base_price?, minimum_price?, pricing_mode?)` | Changes price and floor | Same validation as `/admin` (floor ≤ price; negotiable needs a floor). Audit row |
-| `list_open_handovers()` / `resolve_handover(id, note)` | Work the handover queue | — |
+| `list_open_handovers()` / `resolve_handover(id, note)` | Work the handover queue | PIN (handover summaries hold customer details). Resolve is audited |
 | `get_owner_brief()` | Unchanged | — |
 
 Every write returns before/after values, so the teammate can confirm exactly what changed. One
@@ -52,5 +52,5 @@ yours.
 | G-1 owner runs the shop by chat | ✅ live | Kemi: "How did we do today?" → brief with impact. "set the white Cloud L to 4" → asked for PIN → `TS-105-WHT-L 0 → 4`, audited (0.04–0.08 credits/turn) |
 | G-2 impact numbers | ✅ | Live brief: "3 after-hours sales (₦33,000)…"; `proactive.test.ts` |
 | G-3 live failed payment | ✅ | AL-XWNGM3 declined via Paystack `/charge`. Found that `verify` reports declines as `abandoned`. Fixed `isFailedAttempt()`. `last_failure` recorded within a minute of deploy |
-| G-4 writing | ✅ | field notes (744 words) + appendix, go-live (324 words), `SUBMISSION.md`, `ROADMAP.md`, `demo:reset` |
+| G-4 writing | ✅ | field notes (807 words after spec 10) + appendix, go-live (240 words), `SUBMISSION.md`, `ROADMAP.md`, `demo:reset` |
 | Recording, role, AI-usage note | ⏳ owner | — |

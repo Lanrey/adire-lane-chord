@@ -72,7 +72,7 @@ tells the agent to use `## Customer Memory` ("Same size L as last time?"). Best-
 are logged only.
 
 ### I-5 Payments go through Chord's booking tools (from spec 07)
-Built and tested. Blocked only on the owner's Paystack **test** key. Spec 07 gains a
+Built and tested, and live since the Paystack **test** key arrived (see Status). Spec 07 gains a
 reconciliation sweep: pending orders with a Chord booking are checked against
 `GET …/bookings` every 5 minutes, so a missed webhook still confirms (the docs advise
 reconciling business-critical events).

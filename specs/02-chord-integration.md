@@ -16,7 +16,7 @@ marked ⚠ and must be confirmed during setup (PRD §10, 00:00–00:30).
 | Conversation | **Thread** (`thread_id`) and **turns** | Keyed by `sender_id` + `session_id` within a workspace |
 | Simulator session | **Partner external chat** conversation (`pconv_…`) | The TSG WhatsApp simulator (chat.tsglabs.dev) is a separate Chord Connect partner app that calls `/partner/v1/external-chat/messages` |
 | Human handover | Built-in tool **`handover_to_human`** → thread `control_state` `agent_active → human_active` | Only offered on thread-bound turns (all external-chat turns qualify). Fires the `conversation.escalated` webhook and an escalation email |
-| Escalation conditions | **Escalation triggers** = procedures tagged `escalation` | Stored escalation rules are switched off by default (`400 ESCALATION_RULES_DEPRECATED`). Triggers are the live path |
+| Escalation conditions | **Escalation triggers** = procedures tagged `escalation` | Stored escalation rules are switched off by default (`400 ESCALATION_RULES_DEPRECATED`). Triggers are the documented path, but skill teammates reject them (see Live verification), so we escalate from the skill |
 | Payment connector | Built-in connector tool type `paystack` | **Not used.** We need payment tied atomically to stock reservation in our own backend (constitution §3–4) |
 
 ## How a simulator message reaches our backend

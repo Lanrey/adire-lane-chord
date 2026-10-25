@@ -46,14 +46,16 @@ for itself.
 ## Run it
 
 ```bash
+# all commands from the repo root
 cp .env.example .env                       # fill tokens: openssl rand -hex 24
-cd server && npm install && npm test && npm run dev     # Node ≥ 23.6, no build step
+npm --prefix server install && npm --prefix server test   # Node ≥ 23.6, no build step
+npm --prefix server run dev                # local server
 fly deploy                                 # backend (fly.toml), secrets via fly secrets set
-npm run chord:setup                        # sales teammate: tools + skill
-npm run chord:owner                        # owner teammate + 8pm schedule
-npm run chord:payments                     # Paystack TEST key → Chord connector + webhook
-npm run demo:reset                         # clean demo data before recording
-npm run chord:credits                      # credit balance (free)
+npm --prefix server run chord:setup        # sales teammate: tools + skill
+npm --prefix server run chord:owner        # owner teammate + 8pm schedule
+npm --prefix server run chord:payments     # Paystack TEST key → Chord connector + webhook
+npm --prefix server run demo:reset         # clean demo data before recording
+npm --prefix server run chord:credits      # credit balance (free)
 ```
 
 ## How I used AI

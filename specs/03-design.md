@@ -15,7 +15,7 @@
 ## D2. Modules (`server/src`)
 
 ```
-config.ts      env parsing (PORT, PUBLIC_BASE_URL, MCP_TOKEN, ADMIN_TOKEN, PAYSTACK_SECRET_KEY, DB_PATH)
+config.ts      env parsing (see D10)
 db.ts          schema + migrations + tx() helper (BEGIN IMMEDIATE … COMMIT/ROLLBACK)
 seed.ts        Adire Lane business + PRD appendix catalogue
 money.ts       integer kobo helpers, ₦ formatting
@@ -24,8 +24,19 @@ pricing.ts     calculate_offer + offer tokens (FR-04)
 orders.ts      create_pending_order, get_order, reservations, expiry (FR-07, FR-11)
 payments.ts    confirmPayment (idempotent commit), Paystack init/verify/webhook (FR-08, FR-09)
 handover.ts    request_human_handover (FR-10)
-tools.ts       MCP tool registry: zod schemas → service calls → {ok,…} envelopes (FR-06)
-http.ts        Express app: /mcp, /pay, /webhooks/paystack, /admin, /healthz
+tools.ts       MCP tool registry: zod schemas → service calls → {ok,…} envelopes (FR-06);
+               sales server (/mcp) and owner-only server (/mcp/owner, specs/09)
+http.ts        Express app: /mcp, /mcp/owner, /pay, /webhooks/paystack, /webhooks/chord, /admin, /healthz
+admin.ts       owner catalogue CRUD (FR-01)
+errors.ts      BusinessError → {ok:false, error}
+reasons.ts     Paystack failure codes → plain customer words (specs/10)
+chordApi.ts    rate-limited backend → Chord client (≤ 20 rpm, specs/07 P-7)
+chordSync.ts   per-order catalog item sync (specs/07 P-2)
+chordWebhook.ts  /webhooks/chord: signature, dedupe, booking events (specs/07 P-4, P-5)
+notify.ts      proactive messages + purchase memories (specs/08 I-1, I-4; templates specs/10)
+sweeper.ts     60s sweep: Paystack verify, hold reminders, restock alerts, retries, bookings reconcile
+growth.ts      restock waitlist + lost-demand log (specs/08 I-2)
+ownerBrief.ts  evening brief + impact numbers (specs/08 I-3, specs/09 G-2)
 index.ts       boot
 ```
 
@@ -36,7 +47,7 @@ Services take a `db` handle as a parameter, so tests run against an in-memory da
 Money is stored as **integer kobo** (₦1 = 100 kobo) to avoid floating-point errors.
 
 ```
-business(id, name, currency, payment_terms, policies_json, delivery_zones_json, created_at)
+business(id, name, currency, payment_terms, info_json {opening_hours, pickup_address, delivery_zones, returns_policy}, created_at)
 product(id, business_id, code UNIQUE, name, description, item_type[product|service],
         base_price, pricing_mode[fixed|negotiable], minimum_price NULL, unit,
         stock_tracking_enabled, tags, active, updated_at)
@@ -45,9 +56,10 @@ variant(id, product_id, sku UNIQUE, attributes_json {size,colour}, price_overrid
 offer(id 'OF-…', variant_id, quantity, requested_price, agreed_unit_price, expires_at, created_at)
 customer(id, name, phone, delivery_address NULL)      -- upsert by phone
 conversation(id, customer_phone UNIQUE, chord_thread_id NULL, status[open|handover], handover_reason, updated_at)
-orders(id, reference UNIQUE 'AL-XXXXXX', business_id, customer_id, status, payment_status,
+orders(id, reference UNIQUE 'AL-XXXXXX', business_id, customer_id,
+       status[pending_payment|paid|paid_needs_attention|cancelled], payment_status[unpaid|paid],
        subtotal, delivery_fee, total, currency, fulfilment_method, delivery_zone, delivery_address,
-       reserved_until, created_at, updated_at)
+       reserved_until, paid_at, created_at, updated_at)
 order_item(id, order_id, product_id, variant_id, quantity, list_unit_price, agreed_unit_price,
            offer_id NULL, line_total)
 payment(id, order_id, provider[paystack|simulated|admin_test], provider_reference,
@@ -55,6 +67,15 @@ payment(id, order_id, provider[paystack|simulated|admin_test], provider_referenc
 handover(id 'HO-…', customer_phone, customer_name, reason_category, summary, order_reference NULL,
          status[open|resolved], created_at)
 tool_log(id, tool, ok, error_code, order_reference, latency_ms, at)   -- no customer PII
+checkout_nonce(nonce, order_reference, created_at)                    -- simulated checkout, one-time
+-- added in iterations 3–5 (specs/07–09)
+chord_delivery(delivery_id, event_type, outcome, received_at)         -- webhook dedupe
+waitlist(id 'WL-…', variant_id, customer_name, customer_phone, status[waiting|notified|cancelled],
+         created_at, notified_at)  UNIQUE(variant_id, customer_phone)
+demand_event(id, kind[no_match|out_of_stock|below_floor|fixed_price_haggle|waitlist_join], sku, detail, amount, at)
+notification(key '<ref>:<kind>', ref, kind, thread_id, task_id, status[sent|skipped|failed], detail, attempts, updated_at)
+payment_failure(id, order_reference, reason, source, at)
+owner_action(id, tool, target, before_json, after_json, at)           -- owner write audit
 ```
 
 Services have one variant per item. Its `stock_quantity` is NULL, and the product's
@@ -73,6 +94,8 @@ pending_payment AND reserved_until > now`
   so two buyers racing for the last unit can't both reserve it (PRD §13 risk 4).
 
 ## D5. Pricing & negotiation (FR-04)
+
+> The counter-offer formula below is the original one. It was replaced by D12 (specs/10 L-2).
 
 ```
 effective_list_price = variant.price_override ?? product.base_price
@@ -98,7 +121,8 @@ may have raised it since the offer).
                   │
                   ▼
    ┌──── pending_payment (payment_status=unpaid) ────┐
-   │              │ confirmPayment(key)               │ owner cancels (admin)
+   │              │ confirmPayment(key)               │ owner cancels (admin) or
+   │              │                                   │ customer cancel_order (own phone)
    │              ▼                                   ▼
    │   stock ok? ─yes─► paid (payment_status=paid)   cancelled
    │              └no─► paid_needs_attention (+handover HO-…)
@@ -170,11 +194,14 @@ Trusted sources (constitution §3):
 
 ## D10. Configuration & secrets
 
-`.env` (never committed): `PUBLIC_BASE_URL`, `MCP_TOKEN`, `ADMIN_TOKEN`,
-`PAYSTACK_SECRET_KEY` (optional, must be `sk_test_…`), `DB_PATH`, and for the setup script
-`CHORD_BASE_URL`, `CHORD_API_KEY`, `CHORD_WORKSPACE_ID`, `CHORD_TEAMMATE_ID`.
-The server refuses to start if `MCP_TOKEN` or `ADMIN_TOKEN` is shorter than 24 characters,
-or if a Paystack key is `sk_live_`.
+`.env` (never committed): `PORT`, `PUBLIC_BASE_URL`, `MCP_TOKEN`, `ADMIN_TOKEN`,
+`PAYSTACK_SECRET_KEY` (optional, must be `sk_test_…`), `DB_PATH`, `RESERVATION_MINUTES` (30),
+`OFFER_MINUTES` (60), `MCP_MAX_RPM` (120), `PAYMENT_MODE` (`simulated` | `paystack_test` | `chord`),
+`CHORD_WEBHOOK_SECRET`, `OWNER_MCP_TOKEN`, `OWNER_PIN` (6–8 digits), and for the backend → Chord
+client and setup scripts `CHORD_BASE_URL`, `CHORD_API_KEY`, `CHORD_WORKSPACE_ID`, `CHORD_TEAMMATE_ID`.
+The server refuses to start if `MCP_TOKEN` or `ADMIN_TOKEN` (or `OWNER_MCP_TOKEN`, if set) is
+shorter than 24 characters, if a Paystack key is `sk_live_`, or if `PAYMENT_MODE=chord` is set
+without the Chord credentials and webhook secret.
 
 ## D11. Payment confirmation sources (updated after spec 07 went live)
 

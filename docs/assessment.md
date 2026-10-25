@@ -1,7 +1,7 @@
 # Final assessment (2026-10-24)
 
 Checked against the brief (re-read, including role weights) and the live system: both teammates
-active, skill rev 7 live, both tool servers healthy, Paystack connected, 73/73 tests.
+active, skill rev 8 live, both tool servers healthy, Paystack connected, 73/73 tests.
 **Role: Forward-deployed Engineering**, which weights Integration and Field notes most.
 
 ## Brief and deliverables

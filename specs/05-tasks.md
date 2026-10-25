@@ -7,7 +7,7 @@ needs live Chord credentials to verify · `[ ]` not started.
 ## Phase 0 — Verify Chord (00:00–00:30)
 - [x] T0.1 Read the Chord docs and map PRD terms to Chord terms → `02-chord-integration.md`
 - [x] T0.2 Key smoke test: `GET /v1/teammates` and one `POST /v1/external-chat/messages` (`npm run chord:smoke`)
-- [~] T0.3 MCP tools confirmed on external-chat API ✔. Simulator (partner OAuth) connection still to do
+- [x] T0.3 MCP tools confirmed on external-chat API, then in the simulator (threads `6adc0fff…`, `6adc3b0f…`, specs/08, specs/10)
 
 ## Phase 1 — Inventory (00:30–01:45)
 - [x] T1.1 Schema + `tx()` helper (D3) — FR-01..03
@@ -35,7 +35,7 @@ needs live Chord credentials to verify · `[ ]` not started.
 ## Phase 5 — E2E & demo (05:00–06:00)
 - [x] T5.1 Automated backend acceptance suite AT-01..AT-10 (`npm test`)
 - [x] T5.2 `/admin` dashboard showing orders, stock and handovers — FR-11
-- [~] T5.3 Simulator run-through of `docs/demo-script.md`, record the 3-minute video
+- [~] T5.3 Simulator run-through of `docs/demo-script.md` done live. Video tracked in T9.5
 - [x] T5.4 README, field-notes template, go-live note
 
 ## Iteration 2 — integration key, rate limits, credits, deployment (specs/06)
@@ -49,9 +49,9 @@ needs live Chord credentials to verify · `[ ]` not started.
 - [x] T6.8 Skill hardening: no process narration, real handover on repeated tool failure
 - [x] T6.9 `/admin/reset-demo` for clean recordings
 - [x] T6.10 Field notes rewritten from real incidents
-- [ ] T6.11 Connect the WhatsApp simulator (Chord Connect consent: needs the account owner in a browser), record the video, fill the TO FILL notes
+- [x] T6.11 WhatsApp simulator connected and used (owner and tester threads). Field notes filled. Video tracked in T9.5
 - [x] T6.13 Payment incident (field note 4): `/pay` access + rejection logging, punctuation-tolerant pay links · test added
-- [ ] T6.12 Rotate the integration key after the exercise (it was shared in a chat transcript)
+- [ ] T6.12 Rotate the integration key after the exercise. Tracked in T8.11
 
 ## Iteration 3 — Chord-native payments (specs/07)
 - [x] T7.1 Spec 07 from the authenticated OpenAPI doc (catalogs, bookings, connector sessions)
@@ -73,15 +73,15 @@ needs live Chord credentials to verify · `[ ]` not started.
 - [x] T8.7 Reconciliation sweep for Chord bookings (missed webhooks)
 - [x] T8.8 Docs: field notes, go-live note, README, recording script, self-assessment
 - [x] T8.9 Paystack test key → spec 07 go-live
-- [ ] T8.10 Record the 3-minute video (`docs/demo-script.md`), after `POST /admin/reset-demo`
-- [ ] T8.11 Rotate the Chord integration key and Paystack test key after review (both were shared in chat)
+- [ ] T8.10 Record the 3-minute video. Tracked in T9.5
+- [ ] T8.11 Rotate the Chord integration key, the Paystack test key and the owner PIN after review (shared in chat)
 
 ## Iteration 5 — closing the gaps to 5/5 (specs/09)
 - [x] T9.1 Owner write tools (`update_stock`, `set_price_rules`, `list_open_handovers`, `resolve_handover`), PIN-gated, audited · live chat verified
 - [x] T9.2 Impact metrics (after-hours, recovered by follow-ups, waitlist conversions, discount %) in brief + `/admin`
 - [x] T9.3 Live declined-card proof (AL-XWNGM3) → found and fixed Paystack `abandoned`-means-declined
 - [x] T9.4 Field notes cut to top 3 + appendix; go-live note with the 24-hour rule and NDPA; `SUBMISSION.md`; `demo:reset`; `ROADMAP.md`
-- [ ] T9.5 Recording + role line + AI-usage note (owner of the submission)
+- [ ] T9.5 3-minute recording (`docs/demo-script.md`, after `npm --prefix server run demo:reset`). Role line and AI-usage note are done (README, SUBMISSION)
 
 ## Iteration 6 — customer-facing language (specs/10)
 - [x] T10.1 Owner test review: thread `6adc3b0f…` → 5 issues (email, rising counter, "sold out" own item, no cancel, technical duplicate message)
@@ -91,3 +91,4 @@ needs live Chord credentials to verify · `[ ]` not started.
 - [x] T10.5 Plain automatic templates + duplicate suppression + banned-token test
 - [x] T10.6 Skill "Talking to customers" (success/neutral/failure examples), rev 6 → 7
 - [x] T10.7 Docs: README, SUBMISSION, demo script, field notes, assessment
+- [x] T10.8 Doc audit (2026-10-25): skill payment/email/WL rules aligned with specs/07 and 10; specs 01, 03, 04, 05, 07, 08 amended to match the code; date-dependent G-2 test fixed (73/73); skill rev 8 published
