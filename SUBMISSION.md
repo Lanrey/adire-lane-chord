@@ -2,13 +2,19 @@
 
 **Role:** Forward-deployed Engineering
 
-**Problem.** Adire Lane is a one-person streetwear shop in Lagos that sells almost entirely through
-WhatsApp. When the owner is asleep or busy, customers asking "do you have my size?" or "last price?"
-go unanswered and buy elsewhere, and each missed chat is a lost ₦15,000–₦40,000 sale. The assistant
-replies instantly, haggles only within the owner's minimum price, takes payment, keeps stock
-accurate, and tells the owner each evening what sold and what customers wanted. **Left out on
-purpose:** real money, a real WhatsApp number, refunds and deliveries, until a pilot proves it pays
-for itself.
+**Problem statement.** Kemi, the owner of Adire Lane, tries to turn every WhatsApp enquiry into a
+paid order. But messages go unanswered at night and while she's busy, because she sells alone and
+spends her day answering "how much?", "do you have it in 3XL?" and "last price?" and checking bank
+alerts by hand. As a result, customers buy elsewhere, and each missed chat is a lost
+₦15,000–₦40,000 sale.
+
+**Summary.** Adire Lane is a one-person streetwear shop in Yaba, Lagos, and its owner, Kemi, sells
+almost entirely through WhatsApp. Our agent replies to her customers instantly, day and night, using
+live prices and stock. It haggles only down to her minimum price and takes stock off only when
+Paystack confirms the payment. That's worth paying for because each unanswered chat is a
+₦15,000–₦40,000 sale lost to a faster seller, and every hour Kemi spends on repeat questions and bank
+alerts is an hour not spent running the shop. We deliberately left out real money, a real WhatsApp
+number, refunds and deliveries until a pilot shows the agent pays for itself.
 
 | # | Deliverable | Where |
 |---|-------------|-------|
